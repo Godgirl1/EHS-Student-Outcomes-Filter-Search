@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 from IPython.display import clear_output
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
-st.title('EHS Alumnae Outcomes Dashboard', anchor=False)
-st.header('To start, upload the needed file :envelope_with_arrow: below!', divider='gray')
-st.subheader('Please make sure that all the data you would like to filter is in the "All Students" sheet of the workbook', divider='blue')
+st.title('EHS Student Outcomes Dashboard', anchor=False)
+st.link_button("By Christian Johnson", "https://linktr.ee/godgirl1?utm_source=linktree_profile_share&ltsid=4ed1c8e4-ed21-4aed-a83b-7f9aed0d584a")
+st.header('To start, upload the needed file :envelope_with_arrow: below!', divider='blue')
+st.subheader('Please make sure that all the data you would like to filter is in the "All Students" sheet of the workbook.', divider='gray')
 
 #Load Data
 uploaded_file = st.file_uploader("Upload 'EHS DataStatistics Phase II (Student Outcomes).xlsx' file", type=['xlsx'])
@@ -385,6 +386,7 @@ if uploaded_file:
         result = show_filtered_Outcomes(selected_years, grad_school, selected_work_type, selected_degrees)
         if not result.empty:
             st.write("### Filtered Data Table")
+            st.text("Hover over the table to search by text or make the table full screen")
             download_button_csv(result, filename="filtered_data.csv")
             st.dataframe(result)  # Display table after graphs
         else:
