@@ -386,7 +386,7 @@ if uploaded_file:
         result = show_filtered_Outcomes(selected_years, grad_school, selected_work_type, selected_degrees)
         if not result.empty:
             st.write("### Filtered Data Table")
-            st.text("Hover over the table to search by text or make the table full screen")
+            st.text("Hover over the table to search by text or make the table full screen.")
             download_button_csv(result, filename="filtered_data.csv")
             st.dataframe(result)  # Display table after graphs
         else:
