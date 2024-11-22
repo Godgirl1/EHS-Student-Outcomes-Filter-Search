@@ -389,4 +389,3 @@ if uploaded_file:
             st.dataframe(result)  # Display table after graphs
         else:
             st.write("No data available for download.")  
-        
