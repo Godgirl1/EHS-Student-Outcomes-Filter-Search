@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
 from IPython.display import clear_output
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
@@ -17,10 +20,10 @@ if uploaded_file:
         'SCHOLARS': 'string',
         'LAST NAME': 'string',
         'FIRST NAME': 'string',
-        '900#': float,
+        '900#': 'string',
         'MAJOR': 'category',
         'SUPPORT': 'category',
-        'YEAR': int,
+        'YEAR': 'string',
         'CLASSIFICATION': 'category',
         'CATEGORY': 'string',
         'DEGREE': 'category',
@@ -38,7 +41,7 @@ if uploaded_file:
     # filtered_data_for_download = pd.DataFrame()
 
     #Additional Information
-    st.subheader("Additional Information")
+    st.subheader("Dashboard Information")
     st.write(
         """
         This Outcome Dashboard includes a degree pie chart, a GPA bar chart, and the table of filtered alumnae for download.
@@ -156,36 +159,78 @@ if uploaded_file:
         explode = [(count / total_count) * 0.1 for count in degree_counts]  # Adjust 0.1 for desired explosion
         explode = np.clip(explode, 0.005, 0.04)  # Set max and min values for explode so spacing won't be too big or small
 
+        # Define a custom formatting function that doesn't show percentages 2% or less
+        def autopct_format(pct):
+            return f'{pct:.1f}%' if pct >= 2 else ''  # Show percentages only if 2% or higher
+
+        # Define a custom label filter that doesn't show labels if percentage's are 2% or less
+        def filter_labels(labels, sizes):
+            return [label if size > 2 else '' for label, size in zip(labels, sizes)]
+        
+        sizes = degree_counts / total_count * 100
+        filtered_labels = filter_labels(degree_counts.index, sizes)
+        
         # Plot pie chart only if there are multiple degrees or 'All Degrees' is selected and data exists
         if (len(degree_counts) > 1 or 'All Degrees' in degrees) and not degree_counts.empty:
             patches, labels, pct_texts = ax.pie(
                 degree_counts,
-                labels=degree_counts.index,
-                autopct='%1.1f%%',
+                labels=filtered_labels,
+                autopct=autopct_format,
                 startangle=90,
                 colors=plt.cm.Paired.colors, #plt.get_cmap('cool')(np.linspace(0.25, 1.0, len(degree_counts))),
                 explode=explode,
                 pctdistance=0.85,
                 labeldistance=1.17,
                 rotatelabels=False,
-                textprops={'fontsize': 16}
+                textprops={'fontsize': 18}
+            )
+            
+            # Rotate labels and percentages for slices with <4% for readability
+            for i, (patch, label, pct_text) in enumerate(zip(patches, labels, pct_texts)):
+                # Calculate the percentage value directly
+                percentage_value = (degree_counts.iloc[i] / total_count) * 100
+
+                # Only rotate slices with percentages <4%
+                if percentage_value < 5:
+                    angle = (patch.theta2 + patch.theta1) / 2  # Mid-angle of slice
+                    rotation = angle if 90 < angle < 270 else angle  # Adjust rotation for readability
+                    if label:
+                        label.set_rotation(rotation)
+                        label.set_horizontalalignment("center")
+                    if pct_text and pct_text.get_text():  # Ensure pct_text is not empty
+                        pct_text.set_rotation(rotation)
+            
+            #Create Legend with Labels
+            labels_with_pct = [
+                f"{degree}: {count / total_count * 100:.1f}%" for degree, count in degree_counts.items()
+            ]            
+            ax.legend(
+                patches,
+                labels_with_pct,
+                title="Degrees",
+                loc="center right",
+                bbox_to_anchor=(1.35, 0.5),
+                fontsize=15,
+                title_fontsize=15
             )
 
-            # Rotate labels and percentages based on angle for readability
-            for i, (label, pct_text) in enumerate(zip(labels, pct_texts)):
-                percentage_value = float(pct_text.get_text().strip('%'))
-                if percentage_value < 5:
-                    angle = (patches[i].theta2 + patches[i].theta1) / 2  # Mid-angle of slice
-                    rotation = angle if 90 < angle < 270 else angle  # Adjust rotation for readability
-                    label.set_rotation(rotation)
-                    label.set_horizontalalignment("center")
-                    pct_text.set_rotation(rotation)
-
             # Set a dynamic title based on selected years and work type
+            years.sort()
+            if years == ['2019', '2021', '2022', '2023', '2024']:
+                years = ['All Years'] 
+            work_type.sort()
+            if work_type == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
+                work_type = ['All']
+            elif work_type == ['Doctorate Biomedical', 'Doctorate Professional']:
+                work_type = ['All Doctorate']
+            elif work_type == ['Masters Biomedical', 'Masters Professional']:
+                work_type = ['All Masters']
+            elif work_type == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
+                work_type = ['All Doctorate & Masters']
+            
             years_str = ', '.join(map(str, years)) if years else "Filtered Data"
             work_str = ', '.join(work_type) if work_type else "Filtered Data"
-            ax.set_title(f"{work_str} Degree Type Distribution in {years_str}", pad=42, size=18)
-            ax.axis('equal')  # Ensures pie chart is circular
+            ax.set_title(f"{work_str} Filtered Degrees' Distribution in {years_str}", pad=20, size=20)
         else:
             # Clear any previous output if conditions for pie chart are not met
             clear_output()
@@ -199,7 +244,7 @@ if uploaded_file:
         if filtered_data.empty:
             st.write("No data available for the selected filters. Cannot generate plot.")
             return  # Exit the function to prevent the error
-        
+
         else:
             if len(years) == 1 and 'All Years' not in years:
                 # If only one year is selected, calculate GPA by degree for that year
@@ -209,22 +254,46 @@ if uploaded_file:
                 # Filter out degrees with zero occurrences
                 avg_gpa_per_degree = avg_gpa_data_per_degree[avg_gpa_data_per_degree > 0]
 
+                # Generate bar colors using Pastel2 colormap
+                colors = cm.Paired(mcolors.Normalize()(range(len(avg_gpa_per_degree))))
+                
                 # Plot bar chart for GPA by degree
-                bars = avg_gpa_per_degree.plot(kind='bar', ax=ax, color='skyblue', edgecolor='black')
+                bars = avg_gpa_per_degree.plot(kind='bar', ax=ax, color=colors, edgecolor='black')
+
+                # Create dynamic legend
+                handles = [
+                    mpatches.Patch(color=colors[i], label=f"{degree} - {avg_gpa_per_degree[degree]:.2f}")
+                    for i, degree in enumerate(avg_gpa_per_degree.index)
+                ]
+                ax.legend(handles=handles, title="Degrees and Avg GPA", bbox_to_anchor=(1.20, 0.5), loc='center right', fontsize=15, title_fontsize=15)
 
                 # Set the labels
-                ax.tick_params(axis='both', which='major', labelsize=15)
-                ax.set_xlabel("Year", fontsize = 15)
-                ax.set_ylabel("Average GPA", fontsize = 15)
+                ax.tick_params(axis='both', which='major', labelsize=18)
+                ax.set_xlabel("Year", fontsize = 18)
+                ax.set_ylabel("Average GPA", fontsize = 18)
 
                 # Set Dynamic Title
+                work.sort()
+                if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
+                    work= ['All']
+                elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
+                    work = ['All Doctorate']
+                elif work == ['Masters Biomedical', 'Masters Professional']:
+                    work = ['All Masters']
+                elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
+                    work = ['All Doctorate & Masters']
+                
                 if graduate == 'No':
-                    ax.set_title(f"Average GPA of Working Alumnae in {year}", fontsize=16)
+                    title = f"Average GPA of Working Alumnae in {year}"
+                    ax.legend(handles=handles, title="Degrees and Avg GPA", bbox_to_anchor=(1.25, 0.5), loc='center right', fontsize=15, title_fontsize=15)
                 else:
-                    if work == 'All':
-                        ax.set_title(f"Average GPA by Degree in {year}", fontsize=16)
+                    if "All" in work:
+                        title = f"Average GPA by Degree in {year}"
                     else:
-                        ax.set_title(f"Average GPA of {', '.join(work)} Degrees by Degree in {year}", fontsize=16)
+                        title = f"Average GPA of {', '.join(work)} Degrees by Degree in {year}"
+
+                # Set the title on the plot
+                ax.set_title(title, fontsize=20)
 
                 # Add numeric labels on top of each bar
                 for bar in bars.patches:
@@ -234,24 +303,49 @@ if uploaded_file:
                         f'{bar.get_height():.2f}',  # Format to 2 decimal places
                         ha='center',
                         va='bottom',
-                        fontsize = 14
+                        fontsize = 18
                     )
 
             else:
                 # If multiple years are selected, calculate average GPA per year
                 avg_gpa_per_year = filtered_data.groupby('YEAR')['CUMMULATIVE GPA'].mean()
 
+                # Generate bar colors using Pastel2 colormap
+                colors = cm.Paired(mcolors.Normalize()(range(len(avg_gpa_per_year))))
+                
                 # Plot bar chart for average GPA per year
-                bars = avg_gpa_per_year.plot(kind='bar', ax=ax, color='skyblue', edgecolor='black')
+                bars = avg_gpa_per_year.plot(kind='bar', ax=ax, color=colors, edgecolor='black')
+
+                # Create dynamic legend
+                handles = [
+                    mpatches.Patch(color=colors[i], label=f"{year} - {avg_gpa_per_year[year]:.2f}")
+                    for i, year in enumerate(avg_gpa_per_year.index)
+                ]
+                ax.legend(handles=handles, title="Years and Avg GPA", bbox_to_anchor=(1.15, 0.5), loc='center right', fontsize=15, title_fontsize=15)
 
                 # Set the labels
-                ax.tick_params(axis='both', which='major', labelsize=15)
-                ax.set_xlabel("Year", fontsize = 15)
-                ax.set_ylabel("Average GPA", fontsize = 15)
+                ax.tick_params(axis='both', which='major', labelsize=18)
+                ax.set_xlabel("Year", fontsize = 18)
+                ax.set_ylabel("Average GPA", fontsize = 18)
 
                 # Set Dynamic Title
+                years.sort()
+                if years == ['2019', '2021', '2022', '2023', '2024']:
+                    years = ['All Years'] 
+                work.sort()
+                if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
+                    work= ['All']
+                elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
+                    work = ['All Doctorate']
+                elif work == ['Masters Biomedical', 'Masters Professional']:
+                    work = ['All Masters']
+                elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
+                    work = ['All Doctorate & Masters']
+
                 if graduate == 'No':
-                    ax.set_title(f"Average GPA of Working Alumnae per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year", fontsize=16)
+                    title = f"Average GPA of Working Alumnae per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
+                    ax.legend(handles=handles, title="Years and Avg GPA", bbox_to_anchor=(1.25, 0.5), loc='center right', fontsize=15, title_fontsize=15)
+
                 else:
                     # Check if work type is 'All'
                     if "All" in work:
@@ -267,8 +361,8 @@ if uploaded_file:
                         else:
                             title = f"Average GPA of {', '.join(work)} Degrees per Year in {', '.join(map(str, years))}"
 
-                    # Set the title on the plot
-                    ax.set_title(title, fontsize=16)
+                # Set the title on the plot
+                ax.set_title(title, fontsize=20)
 
                 # Add numeric labels on top of each bar
                 for bar in bars.patches:
@@ -278,7 +372,7 @@ if uploaded_file:
                         f'{bar.get_height():.2f}',  # Format to 2 decimal places
                         ha='center',
                         va='bottom',
-                        fontsize = 14
+                        fontsize = 18
                     )
 
             # Add grid for readability
@@ -286,6 +380,10 @@ if uploaded_file:
 
             # Rotate x-axis labels for readability
             ax.tick_params(axis='x', rotation=0)
+
+            # Increase margins for readability (in case bar labels touch the edge)
+            ax.margins(y=0.1)
+            
 
     # Modified main function to display both filtered data and charts
     def show_filtered_Outcomes(years, grad_school, work_type, degrees):
@@ -338,7 +436,7 @@ if uploaded_file:
             st.write("Graduate School is set to 'No'. No degree data to plot in the pie chart.")
 
             # Plot only the bar chart, occupying the entire plot area
-            fig, ax = plt.subplots(figsize=(15, 7))
+            fig, ax = plt.subplots(figsize=(15, 7.5))
             plot_bar_chart(ax, result, years, degrees, work_type, grad_school)
             
             st.pyplot(fig)
@@ -351,16 +449,18 @@ if uploaded_file:
 
                 # Plot pie chart for degree distribution
                 plot_pie_chart(axes[0], result, degrees, years=years, work_type=work_type)
-
+                
                 # Plot bar chart for average GPA per year
                 plot_bar_chart(axes[1], result, years, degrees, work_type, grad_school)
+                
+                plt.tight_layout(h_pad=5)
 
                 st.pyplot(fig)
 
             else:
                 # If no data for pie chart, display only the bar chart
                 st.write("Pie chart is not displayed for a single degree selection or if no data is available.")
-                fig, ax = plt.subplots(figsize=(15, 7))
+                fig, ax = plt.subplots(figsize=(15, 7.5))
                 plot_bar_chart(ax, result, years, degrees, work_type, grad_school)
                 
                 st.pyplot(fig)
