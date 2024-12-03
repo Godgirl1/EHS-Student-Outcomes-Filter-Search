@@ -492,6 +492,6 @@ if uploaded_file:
         else:
             st.write("No data available for download.") 
 else:
-    st.write("No file uploaded!")
+    st.subheader("No file detected!")
     st.write("Please upload, or reupload, the file 'EHS DataStatistics Phase II (Student Outcomes).xlsx' to start the app.")
     st.write("If the file does not upload, please refresh the page and try again.") 
