@@ -1,7 +1,7 @@
 # 📊 Spelman College Environmental & Health Sciences (EHS) Department Student Outcome Search
 ## By [Christian Johnson](https://linktr.ee/godgirl1?utm_source=linktree_profile_share&ltsid=4ed1c8e4-ed21-4aed-a83b-7f9aed0d584a)
 
-A extensive search app for the EHS Student Outcomes Workbook!
+An extensive search app for the EHS Student Outcomes Workbook!
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ehs-student-outcomes-filter-search.streamlit.app/)
 
