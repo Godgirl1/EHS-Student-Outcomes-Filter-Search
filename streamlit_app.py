@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 from IPython.display import clear_output
-#Stable Version 2 - All Systems Go!
+#Stable Version 3 - All Systems Go!
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
 st.title('EHS Student Outcomes Dashboard', anchor=False)
@@ -492,5 +492,6 @@ if uploaded_file:
         else:
             st.write("No data available for download.") 
 else:
-    st.write("No file uploaded! Please upload or reupload the 'EHS DataStatistics Phase II (Student Outcomes).xlsx' file.")
+    st.write("No file uploaded!")
+    st.write("Please upload, or reupload, the file 'EHS DataStatistics Phase II (Student Outcomes).xlsx' to start the app.")
     st.write("If the file does not upload, please refresh the page and try again.") 
