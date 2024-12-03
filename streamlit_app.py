@@ -38,8 +38,6 @@ if uploaded_file:
         'DECIDED TO WORK/TYPE OF GRADUATE SCHOOL': 'category'
     }, na_values=['N/A', 'NaN', ""])
 
-    # # Initialize `filtered_data_for_download` as an empty DataFrame to avoid NameError
-    # filtered_data_for_download = pd.DataFrame()
 
     #Additional Information
     st.subheader("Dashboard Information")
@@ -272,22 +270,22 @@ if uploaded_file:
                 ax.tick_params(axis='both', which='major', labelsize=18)
                 ax.set_xlabel("Year", fontsize = 18)
                 ax.set_ylabel("Average GPA", fontsize = 18)
-
-                # Set Dynamic Title
-                work.sort()
-                if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
-                    work= ['All']
-                elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
-                    work = ['All Doctorate']
-                elif work == ['Masters Biomedical', 'Masters Professional']:
-                    work = ['All Masters']
-                elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
-                    work = ['All Doctorate & Masters']
                 
                 if graduate == 'No':
                     title = f"Average GPA of Working Alumnae in {year}"
                     ax.legend(handles=handles, title="Degrees and Avg GPA", bbox_to_anchor=(1.25, 0.5), loc='center right', fontsize=15, title_fontsize=15)
                 else:
+                    # Set Dynamic Title
+                    work.sort()
+                    if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
+                        work= ['All']
+                    elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
+                        work = ['All Doctorate']
+                    elif work == ['Masters Biomedical', 'Masters Professional']:
+                        work = ['All Masters']
+                    elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
+                        work = ['All Doctorate & Masters']
+                    
                     if "All" in work:
                         title = f"Average GPA by Degree in {year}"
                     else:
@@ -322,7 +320,7 @@ if uploaded_file:
                     mpatches.Patch(color=colors[i], label=f"{year} - {avg_gpa_per_year[year]:.2f}")
                     for i, year in enumerate(avg_gpa_per_year.index)
                 ]
-                ax.legend(handles=handles, title="Years and Avg GPA", bbox_to_anchor=(1.15, 0.5), loc='center right', fontsize=15, title_fontsize=15)
+                ax.legend(handles=handles, title="Years and Avg GPA", bbox_to_anchor=(1.20, 0.5), loc='center right', fontsize=15, title_fontsize=15)
 
                 # Set the labels
                 ax.tick_params(axis='both', which='major', labelsize=18)
@@ -333,15 +331,6 @@ if uploaded_file:
                 years.sort()
                 if years == ['2019', '2021', '2022', '2023', '2024']:
                     years = ['All Years'] 
-                work.sort()
-                if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
-                    work= ['All']
-                elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
-                    work = ['All Doctorate']
-                elif work == ['Masters Biomedical', 'Masters Professional']:
-                    work = ['All Masters']
-                elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
-                    work = ['All Doctorate & Masters']
 
                 if graduate == 'No':
                     title = f"Average GPA of Working Alumnae per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
@@ -349,6 +338,16 @@ if uploaded_file:
 
                 else:
                     # Check if work type is 'All'
+                    work.sort()
+                    if work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional', 'Ph.D.']:
+                        work= ['All']
+                    elif work == ['Doctorate Biomedical', 'Doctorate Professional']:
+                        work = ['All Doctorate']
+                    elif work == ['Masters Biomedical', 'Masters Professional']:
+                        work = ['All Masters']
+                    elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
+                        work = ['All Doctorate & Masters']
+                    
                     if "All" in work:
                         # Handle title for all work types and degrees
                         if len(degrees) <= 4 and "All Degrees" not in degrees:
@@ -491,4 +490,7 @@ if uploaded_file:
             download_button_csv(result, filename="filtered_data.csv")
             st.dataframe(result)  # Display table after graphs
         else:
-            st.write("No data available for download.")  
+            st.write("No data available for download.") 
+else:
+    st.write("No file uploaded! Please upload or reupload the 'EHS DataStatistics Phase II (Student Outcomes).xlsx' file.")
+    st.write("If the file does not upload, please refresh the page and try again.") 
