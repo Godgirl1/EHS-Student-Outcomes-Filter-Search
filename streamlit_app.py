@@ -226,6 +226,10 @@ if uploaded_file:
                 work_type = ['All Masters']
             elif work_type == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
                 work_type = ['All Doctorate & Masters']
+            elif work_type == ['Doctorate Biomedical', 'Masters Biomedical']:
+                work_type = ['All Biomedical']
+            elif work_type == ['Doctorate Professional', 'Masters Professional']:
+                work_type = ['All Professional']
             
             years_str = ', '.join(map(str, years)) if years else "Filtered Data"
             work_str = ', '.join(work_type) if work_type else "Filtered Data"
@@ -285,11 +289,15 @@ if uploaded_file:
                         work = ['All Masters']
                     elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
                         work = ['All Doctorate & Masters']
+                    elif work == ['Doctorate Biomedical', 'Masters Biomedical']:
+                        work = ['All Biomedical']
+                    elif work == ['Doctorate Professional', 'Masters Professional']:
+                        work = ['All Professional']
                     
                     if "All" in work:
-                        title = f"Average GPA by Degree in {year}"
+                        title = f"Average GPA by Filtered Degrees in {year}"
                     else:
-                        title = f"Average GPA of {', '.join(work)} Degrees by Degree in {year}"
+                        title = f"Average GPA of {', '.join(work)} Filtered Degrees by Degree in {year}"
 
                 # Set the title on the plot
                 ax.set_title(title, fontsize=20)
@@ -347,7 +355,11 @@ if uploaded_file:
                         work = ['All Masters']
                     elif work == ['Doctorate Biomedical', 'Doctorate Professional', 'Masters Biomedical', 'Masters Professional']:
                         work = ['All Doctorate & Masters']
-                    
+                    elif work == ['Doctorate Biomedical', 'Masters Biomedical']:
+                        work = ['All Biomedical']
+                    elif work == ['Doctorate Professional', 'Masters Professional']:
+                        work = ['All Professional']
+                        
                     if "All" in work:
                         # Handle title for all work types and degrees
                         if len(degrees) <= 4 and "All Degrees" not in degrees:
@@ -359,7 +371,7 @@ if uploaded_file:
                         if len(degrees) <= 4 and "All Degrees" not in degrees:
                             title = f"Average GPA of {', '.join(work)} ({', '.join(degrees)}) Degrees per Year in {', '.join(map(str, years))}"
                         else:
-                            title = f"Average GPA of {', '.join(work)} Degrees per Year in {', '.join(map(str, years))}"
+                            title = f"Average GPA of {', '.join(work)} Filtered Degrees per Year in {', '.join(map(str, years))}"
 
                 # Set the title on the plot
                 ax.set_title(title, fontsize=20)
