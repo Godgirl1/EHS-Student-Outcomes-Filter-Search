@@ -116,7 +116,7 @@ if uploaded_file:
     # Graduate School Selector (Added "All Students")
     grad_school = st.sidebar.selectbox("Graduate School?", ["All Students", "Yes", "No"], help="Filter by whether or not the student(s) attended graduate school.")
 
-    # Degree and Work Type Selectors (Always Available)
+    # Degree and Work Type Selectors (Based on Graduate School Selection)
     if grad_school == "Yes" or grad_school == "All Students":
         # Work Type Selector (depends on selected years and graduate school status)
         work_types = get_work_type_options(selected_years, grad_school)
