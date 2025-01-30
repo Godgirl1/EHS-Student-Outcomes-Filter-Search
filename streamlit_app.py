@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
 from IPython.display import clear_output
-#Stable Version 3 - All Systems Go!
+#Version ___ - Interactive Graphs
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
 st.title('EHS Student Outcomes Dashboard', anchor=False)
@@ -56,13 +56,13 @@ if uploaded_file:
     st.sidebar.header("Filter Options")
 
     # Function to get Degree options filtered by selected years and work type
-    def get_degree_options(selected_years, selected_work_type):
+    def get_degree_options(selected_years, selected_work_type, grad_school):
         # Filter data based on selected years
         if selected_years and 'All Years' in selected_years:
             filtered_data = Outcomes.copy()  # Include all data
         else:
             filtered_data = Outcomes[Outcomes['YEAR'].isin(selected_years)]
-       
+        
         # Apply work type filter only if "All" is not selected
         if selected_work_type and 'All' not in selected_work_type:
             filtered_data = filtered_data[filtered_data['DECIDED TO WORK/TYPE OF GRADUATE SCHOOL'].isin(selected_work_type)]
@@ -74,15 +74,20 @@ if uploaded_file:
         # Insert 'All Degrees' at the top of the list if not already present
         if 'All Degrees' not in degrees:
             degrees.insert(0, 'All Degrees')
-        
-        # Remove 'No Degree' from the options if present
+
         if 'No Degree' in degrees:
             degrees.remove('No Degree')
+            degrees.insert(len(degrees), 'No Degree')
+        
+        # Remove 'No Degree' from options when "Graduate School?" is "Yes"
+        if grad_school == "Yes" and 'No Degree' in degrees:
+            degrees.remove('No Degree')
+
         return degrees
 
     # Function to get Work Type options filtered by selected years
-    def get_work_type_options(selected_years):
-    # Filter data based on selected years
+    def get_work_type_options(selected_years, grad_school):
+        # Filter data based on selected years
         if selected_years and 'All Years' in selected_years:
             filtered_data = Outcomes.copy()  # Include all data
         else:
@@ -93,53 +98,76 @@ if uploaded_file:
 
         if 'All' not in work_types:
             work_types.insert(0, 'All')
+
         if 'Unknown' in work_types:
             work_types.remove('Unknown')
-        if 'Work' in work_types:
+
+        # Remove 'Work' from options when "Graduate School?" is "Yes"
+        if grad_school == "Yes" and 'Work' in work_types:
             work_types.remove('Work')
+
         return work_types
 
-    #Filter Widgets
+    # Filter Widgets
     # Year Selector
     years = ["All Years"] + sorted(Outcomes['YEAR'].dropna().unique())
     selected_years = st.sidebar.multiselect("Select Graduation Year(s):", years, default=["All Years"], label_visibility="visible", key="year_multiselect", help="Select one or more years to filter data by student graduation year.")
 
-    #Graduate School Selector
-    grad_school = st.sidebar.selectbox("Graduate School?", ["Yes", "No"], help="Choose if student attended graduate school")
-    
-    # Conditionally render Degree and Work Type selectors based on grad_school_selection
-    if grad_school == "Yes":
-        # Degree/Work Type Selector (depends on selected years)
-        work_types = get_work_type_options(selected_years)
-        selected_work_type = st.sidebar.multiselect("Degree Type:", work_types, default=["All"], label_visibility="visible", key="work_multiselect", help="Select the type of degree the student recieved, or choose 'All' to include all degree types")
+    # Graduate School Selector (Added "All Students")
+    grad_school = st.sidebar.selectbox("Graduate School?", ["All Students", "Yes", "No"], help="Filter by whether or not the student(s) attended graduate school.")
 
-        # Degree Selector (depends on selected years and work type)
-        degree_options = get_degree_options(selected_years, selected_work_type)
-        selected_degrees = st.sidebar.multiselect("Degree(s):", degree_options, label_visibility="visible", default=["All Degrees"],  key="degree_multiselect", help="Select one or more degrees, or choose 'All Degrees' to include all available degrees, under the corrsponding degree type")
-    else:
-        selected_work_type = None  # Set to None when grad_school = "No"
-        selected_degrees = None  # Set to None when grad_school = "No"
+    # Degree and Work Type Selectors (Always Available)
+    if grad_school == "Yes" or grad_school == "All Students":
+        # Work Type Selector (depends on selected years and graduate school status)
+        work_types = get_work_type_options(selected_years, grad_school)
+        selected_work_type = st.sidebar.multiselect("Post-Graduation Route:", work_types, default=["All"], label_visibility="visible", key="work_multiselect", help="Select the post-graduate route the student(s) pursued, or choose 'All' to include all routes.")
 
+        # Degree Selector (depends on selected years, work type, and graduate school status)
+        degree_options = get_degree_options(selected_years, selected_work_type, grad_school)
+        selected_degrees = st.sidebar.multiselect("Degree(s):", degree_options, label_visibility="visible", default=["All Degrees"], key="degree_multiselect", help="Select one or more degrees, or choose 'All Degrees' to include all available degrees, under the corresponding post-graduation route.")
+    else: #Disable work_type and degree filters, when grad_school == "No"
+        selected_work_type = None 
+        selected_degrees = None  
 
     # Main Filtering Function
     def filter_Outcomes(years=None, grad_school=None, degrees=None, work_type=None):
         filtered = Outcomes.copy()
 
+        # Year Filter (only filter if not "All Years")
         if years and "All Years" not in years:
             print(f"Filtering for years: {years}")
             filtered = filtered[filtered['YEAR'].isin(years)]
         
-        if grad_school:
+        # Graduate School Filter (only filter if not "All Students")
+        if grad_school and grad_school != "All Students":
             print(f"Filtering for graduate school: {grad_school}")
             filtered = filtered[filtered['GRADUATE SCHOOL?'] == grad_school]
-        
-        if degrees and "All Degrees" not in degrees:
-            print(f"Filtering for degrees: {degrees}")
-            filtered = filtered[filtered['HIGHEST DEGREE FROM GRADUATE SCHOOL'].isin(degrees)]
-        
-        if work_type and "All" not in work_type:
-            print(f"Filtering for work type: {work_type}")
-            filtered = filtered[filtered['DECIDED TO WORK/TYPE OF GRADUATE SCHOOL'].isin(work_type)]
+
+        # If "All Students" is selected, only apply degree & work filters to grad students
+        if grad_school == "All Students":
+            grad_students = filtered[filtered['GRADUATE SCHOOL?'] == "Yes"]
+
+            if degrees and "All Degrees" not in degrees:
+                print(f"Filtering for degrees: {degrees}")
+                grad_students = grad_students[grad_students['HIGHEST DEGREE FROM GRADUATE SCHOOL'].isin(degrees)]
+
+            if work_type and "All" not in work_type:
+                print(f"Filtering for work type: {work_type}")
+                grad_students = grad_students[grad_students['DECIDED TO WORK/TYPE OF GRADUATE SCHOOL'].isin(work_type)]
+
+            # Combine filtered grad students with non-grad students
+            non_grad_students = filtered[filtered['GRADUATE SCHOOL?'] == "No"]
+            filtered = pd.concat([grad_students, non_grad_students])
+
+        else:
+            # Apply filters normally if "Yes" or "No" is selected
+            if degrees and "All Degrees" not in degrees:
+                print(f"Filtering for degrees: {degrees}")
+                filtered = filtered[filtered['HIGHEST DEGREE FROM GRADUATE SCHOOL'].isin(degrees)]
+
+            if work_type and "All" not in work_type:
+                print(f"Filtering for work type: {work_type}")
+                filtered = filtered[filtered['DECIDED TO WORK/TYPE OF GRADUATE SCHOOL'].isin(work_type)]
 
         print(f"Filtered data size: {filtered.shape}")
         return filtered
