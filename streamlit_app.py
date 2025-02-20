@@ -1,12 +1,16 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.patches as mpatches
+
+# import plotly.express as px
+# import plotly.graph_objects as go
+
 from IPython.display import clear_output
-#Version ___ - Interactive Graphs
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
 st.title('EHS Student Outcomes Dashboard', anchor=False)
@@ -180,6 +184,10 @@ if uploaded_file:
         # Count occurrences of each degree in the filtered data
         degree_counts = filtered_data[degree_col].value_counts()
         degree_counts = degree_counts[degree_counts > 0] # Filter out degrees with zero occurrences
+
+        # Replace "No Degree" with "Workforce"
+        if "No Degree" in degree_counts:
+            degree_counts.index = degree_counts.index.str.replace("No Degree", "Workforce")
         
         # Calculate explode values based on slice size
         total_count = degree_counts.sum()
@@ -261,7 +269,7 @@ if uploaded_file:
             
             years_str = ', '.join(map(str, years)) if years else "Filtered Data"
             work_str = ', '.join(work_type) if work_type else "Filtered Data"
-            ax.set_title(f"{work_str} Filtered Degrees' Distribution in {years_str}", pad=20, size=20)
+            ax.set_title(f"{work_str} Filtered Graduate Degrees' Distribution in {years_str}", pad=20, size=20)
         else:
             # Clear any previous output if conditions for pie chart are not met
             clear_output()
@@ -277,6 +285,9 @@ if uploaded_file:
             return  # Exit the function to prevent the error
 
         else:
+            if "No Degree" in work:
+                work.index = work.index.str.replace("No Degree", "Workforce")
+
             if len(years) == 1 and 'All Years' not in years:
                 # If only one year is selected, calculate GPA by degree for that year
                 year = years[0]
@@ -284,6 +295,10 @@ if uploaded_file:
 
                 # Filter out degrees with zero occurrences
                 avg_gpa_per_degree = avg_gpa_data_per_degree[avg_gpa_data_per_degree > 0]
+
+                # Replace "No Degree" with "Workforce"
+                if "No Degree" in avg_gpa_per_degree:
+                    avg_gpa_per_degree.index = avg_gpa_per_degree.index.str.replace("No Degree", "Workforce")
 
                 # Generate bar colors using Pastel2 colormap
                 colors = cm.Paired(mcolors.Normalize()(range(len(avg_gpa_per_degree))))
@@ -323,9 +338,9 @@ if uploaded_file:
                         work = ['All Professional']
                     
                     if "All" in work:
-                        title = f"Average GPA by Filtered Degrees in {year}"
+                        title = f"Average GPA by Filtered Graduate Degrees in {year}"
                     else:
-                        title = f"Average GPA of {', '.join(work)} Filtered Degrees by Degree in {year}"
+                        title = f"Average GPA of {', '.join(work)} Filtered Graduate Degrees by Degree in {year}"
 
                 # Set the title on the plot
                 ax.set_title(title, fontsize=20)
@@ -344,6 +359,10 @@ if uploaded_file:
             else:
                 # If multiple years are selected, calculate average GPA per year
                 avg_gpa_per_year = filtered_data.groupby('YEAR')['CUMMULATIVE GPA'].mean()
+
+                # Replace "No Degree" with "Workforce"
+                if "No Degree" in avg_gpa_per_year :
+                    avg_gpa_per_year .index = avg_gpa_per_year.index.str.replace("No Degree", "Workforce")
 
                 # Generate bar colors using Pastel2 colormap
                 colors = cm.Paired(mcolors.Normalize()(range(len(avg_gpa_per_year))))
@@ -391,15 +410,15 @@ if uploaded_file:
                     if "All" in work:
                         # Handle title for all work types and degrees
                         if len(degrees) <= 4 and "All Degrees" not in degrees:
-                            title = f"Average GPA of {', '.join(degrees)} Degrees per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
+                            title = f"Average GPA of {', '.join(degrees)} Graduate Degrees per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
                         else:
-                            title = f"Average GPA of Multiple Degrees per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
+                            title = f"Average GPA of Multiple Graduate Degrees per Year in {', '.join(map(str, years))}" if years else "Average GPA per Year"
                     else:
                         # Handle title when specific work type is selected
                         if len(degrees) <= 4 and "All Degrees" not in degrees:
-                            title = f"Average GPA of {', '.join(work)} ({', '.join(degrees)}) Degrees per Year in {', '.join(map(str, years))}"
+                            title = f"Average GPA of {', '.join(work)} ({', '.join(degrees)}) Graduate Degrees per Year in {', '.join(map(str, years))}"
                         else:
-                            title = f"Average GPA of {', '.join(work)} Filtered Degrees per Year in {', '.join(map(str, years))}"
+                            title = f"Average GPA of {', '.join(work)} Filtered Graduate Degrees per Year in {', '.join(map(str, years))}"
 
                 # Set the title on the plot
                 ax.set_title(title, fontsize=20)
