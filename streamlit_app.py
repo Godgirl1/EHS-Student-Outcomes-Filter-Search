@@ -11,6 +11,7 @@ import matplotlib.patches as mpatches
 # import plotly.graph_objects as go
 
 from IPython.display import clear_output
+#Version 5 - 'No Degree' to 'Workforce' & Blue Color Palet & Spaced Legend
 
 st.set_page_config(page_title="EHS Alumnae Outcomes Dashboard")
 st.title('EHS Student Outcomes Dashboard', anchor=False)
@@ -21,7 +22,7 @@ st.subheader('Please make sure that all the data you would like to filter is in 
 #Load Data
 uploaded_file = st.file_uploader("Upload 'EHS DataStatistics Phase II (Student Outcomes).xlsx' file", type=['xlsx'])
 if uploaded_file:
-    Outcomes = pd.read_excel(uploaded_file, sheet_name='All Students', index_col=None, usecols='A:R', dtype={
+    Outcomes = pd.read_excel(uploaded_file, sheet_name='All Students', index_col=None, usecols='A:S', dtype={
         'SCHOLARS': 'string',
         'LAST NAME': 'string',
         'FIRST NAME': 'string',
@@ -37,6 +38,7 @@ if uploaded_file:
         'CELL PHONE NUMBER': 'string',
         'GRADUATE SCHOOL?': 'category',
         'WHAT GRADUATE SCHOOL?': 'string',
+        'GRADUATE SCHOOL TYPE (IF ANY)': 'string',
         'MAJOR IN GRADUATE SCHOOL?': 'string',
         'HIGHEST DEGREE FROM GRADUATE SCHOOL': 'category',
         'DECIDED TO WORK/TYPE OF GRADUATE SCHOOL': 'category'
@@ -60,6 +62,7 @@ if uploaded_file:
     st.sidebar.header("Filter Options")
 
     # Function to get Degree options filtered by selected years and work type
+    print(Outcomes.columns)
     def get_degree_options(selected_years, selected_work_type, grad_school):
         # Filter data based on selected years
         if selected_years and 'All Years' in selected_years:
@@ -212,7 +215,7 @@ if uploaded_file:
                 labels=filtered_labels,
                 autopct=autopct_format,
                 startangle=90,
-                colors=plt.cm.Paired.colors, #plt.get_cmap('cool')(np.linspace(0.25, 1.0, len(degree_counts))),
+                colors=plt.cm.tab20c.colors, #plt.get_cmap('cool')(np.linspace(0.25, 1.0, len(degree_counts))),
                 explode=explode,
                 pctdistance=0.85,
                 labeldistance=1.17,
@@ -244,7 +247,7 @@ if uploaded_file:
                 labels_with_pct,
                 title="Degrees",
                 loc="center right",
-                bbox_to_anchor=(1.35, 0.5),
+                bbox_to_anchor=(1.40, 0.5),
                 fontsize=15,
                 title_fontsize=15
             )
@@ -315,7 +318,7 @@ if uploaded_file:
 
                 # Set the labels
                 ax.tick_params(axis='both', which='major', labelsize=18)
-                ax.set_xlabel("Year", fontsize = 18)
+                ax.set_xlabel("Degree", fontsize = 18)
                 ax.set_ylabel("Average GPA", fontsize = 18)
                 
                 if graduate == 'No':
@@ -362,7 +365,7 @@ if uploaded_file:
 
                 # Replace "No Degree" with "Workforce"
                 if "No Degree" in avg_gpa_per_year :
-                    avg_gpa_per_year .index = avg_gpa_per_year.index.str.replace("No Degree", "Workforce")
+                    avg_gpa_per_year.index = avg_gpa_per_year.index.str.replace("No Degree", "Workforce")
 
                 # Generate bar colors using Pastel2 colormap
                 colors = cm.Paired(mcolors.Normalize()(range(len(avg_gpa_per_year))))
@@ -460,7 +463,11 @@ if uploaded_file:
             total_students_in_years = len(Outcomes[Outcomes['YEAR'].isin(selected_years)])
         
         # Count occurrences of each degree in the filtered data
-        degree_counts = result['HIGHEST DEGREE FROM GRADUATE SCHOOL'].value_counts()
+        filtered_data = result.copy()
+        if 'All Degrees' not in degrees:
+            filtered_data = result[result['HIGHEST DEGREE FROM GRADUATE SCHOOL'].isin(degrees)]
+
+        degree_counts = filtered_data['HIGHEST DEGREE FROM GRADUATE SCHOOL'].value_counts()
         degree_counts = degree_counts[degree_counts > 0] # Filter out degrees with zero occurrences
 
         # Clear previous output to prevent flashing
