@@ -4,4 +4,9 @@ numpy
 matplotlib
 IPython
 openpyxl
+plotly
 
+# Need to install new packages? pip install -r requirements.txt
+# When we need to freeze versions:  pip list --format=freeze > requirements.txt
+# Install pip upgrader to update  everything at onece: pip install pip-upgrader, need venv.
+    # When we need to update pip: pip install --upgrade pip
